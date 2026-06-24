@@ -2,16 +2,15 @@ import os
 import random
 import discord
 from discord.ext import commands, tasks
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # ========================================================
 # CONFIGURAZIONE ID
 # ========================================================
 ID_CANALE_RECENSIONI = 1519310548024426577  # Canale dove mandare le recensioni
-ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log di fine combinazioni
-ID_RUOLO_STAFF = 1519316973614268566        # Ruolo staff per comandi
+ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log segreto di fine corsa
 
-# Componenti per i nickname
+# Componenti per i nickname (stile reali utenti discord)
 PREFISSI_USER = ["vortex", "zack", "hyper", "dark", "liquid", "gamer", "swift", "glitch", "alpha", "shadow", "neon", "apex", "ghost", "pulse"]
 SUFISSI_USER = ["_fps", "99", "_tuning", "gg", "ovr", "x", "⚡", "_pc", "plays", "04", "_clutch", "god", "z", "xd", "_w", "fr", "hz"]
 
@@ -46,114 +45,101 @@ BLOCCO_3 = [
     "stutters are completely gone goodbye"
 ]
 
-class BotRecensioniUniche(commands.Bot):
+class BotRecensioniInvisibili(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         super().__init__(command_prefix="!", intents=intents)
         
-        # Liste per gestire l'univocità assoluta ed evitare ripetizioni
         self.combinazioni_rimanenti = []
-        self.tempo_corrente_minuti = 109  # 1 ora e 49 minuti iniziali (60 + 49)
+        self.tempo_corrente_minuti = 109  # Parte da 1 ora e 49 minuti
 
     def genera_tutte_le_combinazioni(self):
-        """Genera tutte le permutazioni possibili e uniche dei blocchi di testo"""
         lista_totale = []
         for b1 in BLOCCO_1:
             for b2 in BLOCCO_2:
                 for b3 in BLOCCO_3:
                     testo_recensione = f'"{b1}, {b2}. {b3} ⭐⭐⭐⭐⭐"'
                     lista_totale.append(testo_recensione)
-        # Mescola l'ordine in modo casuale
         random.shuffle(lista_totale)
         return lista_totale
 
     async def setup_hook(self):
-        # Carica il pool iniziale di combinazioni uniche (7 * 7 * 7 = 343 combinazioni)
         self.combinazioni_rimanenti = self.genera_tutte_le_combinazioni()
         await self.tree.sync()
 
     async def on_ready(self):
-        print(f"🚀 Bot pronto. Combinazioni uniche caricate: {len(self.combinazioni_rimanenti)}")
+        print(f"🚀 Bot Pronto. Sistema anti-sgamo attivo.")
 
-bot = BotRecensioniUniche()
+bot = BotRecensioniInvisibili()
 
 # ========================================================
 # TASK DINAMICO CON INCREMENTO DEL TEMPO
 # ========================================================
-@tasks.loop(minutes=109) # Il valore iniziale viene sovrascritto dinamicamente dal codice sotto
+@tasks.loop(minutes=109)
 async def loop_recensioni_dinamico():
-    # Controllo immediato se ci sono ancora recensioni disponibili
     if not bot.combinazioni_rimanenti:
         canale_log = bot.get_channel(ID_CANALE_LOG_FINE)
         if canale_log:
-            await canale_log.send(f"🛑 **[LOG SISTEMA]** Il bot ha terminato tutte le combinazioni uniche disponibili nel database. Il processo è stato interrotto per evitare duplicati.")
+            await canale_log.send(f"🛑 **[LOG]** Finito il pool di combinazioni. Arresto di sicurezza eseguito.")
         loop_recensioni_dinamico.stop()
         return
 
     canale_recensioni = bot.get_channel(ID_CANALE_RECENSIONI)
     if canale_recensioni:
-        # Prende ed elimina la prima recensione della lista (garantisce zero doppioni)
         recensione = bot.combinazioni_rimanenti.pop(0)
-        
-        # Genera un username casuale sul momento
         utente = f"{random.choice(PREFISSI_USER)}{random.choice(SUFISSI_USER)}"
 
-        # Widget curato nei minimi dettagli (Stile feedback giallo stella)
+        # Design ultra-realistico: stile +rep che si fonde con lo sfondo scuro di Discord
         embed = discord.Embed(
-            title="💬 Customer Feedback",
+            title=f"➕ +rep from {utente}",
             description=recensione,
-            color=discord.Color.from_str("#FEE75C")
+            color=discord.Color.from_str("#2b2d31") # Sfondo nativo Discord Dark
         )
-        embed.add_field(name="👤 User", value=f"`{utente}`", inline=True)
-        embed.add_field(name="✅ Status", value="Verified Buyer", inline=True)
-        embed.set_footer(text=f"Mako Tweaks • Remaining unique pool: {len(bot.combinazioni_rimanenti)}")
+        embed.add_field(name="Status", value="✓ Verified Customer", inline=True)
+        embed.set_footer(text="Mako Tweaks • Customer Vouch")
         embed.timestamp = datetime.now()
 
         await canale_recensioni.send(embed=embed)
 
-    # Incrementa il timer di 29 minuti per il prossimo invio
+    # Incrementa l'attesa di 29 minuti per rendere i pattern impossibili da tracciare
     bot.tempo_corrente_minuti += 29
     loop_recensioni_dinamico.change_interval(minutes=bot.tempo_corrente_minuti)
 
 # ========================================================
-# COMANDI SLASH DI GESTIONE
+# COMANDI SLASH PROTETTI (SOLO AMMINISTRATORI)
 # ========================================================
-@bot.tree.command(name="start_reviews", description="Attiva il sistema di recensioni uniche e progressive.")
+@bot.tree.command(
+    name="start_reviews", 
+    description="Avvia il sistema di recensioni segrete.",
+    default_permissions=discord.Permissions(administrator=True) # Visibile e usabile solo da admin
+)
 async def start_reviews(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
-    ruolo_staff = interaction.guild.get_role(ID_RUOLO_STAFF)
     
-    if ruolo_staff not in interaction.user.roles:
-        await interaction.followup.send("❌ Permessi insufficienti.", ephemeral=True)
-        return
-
     if loop_recensioni_dinamico.is_running():
-        await interaction.followup.send("ℹ️ Il sistema è già in esecuzione.", ephemeral=True)
+        await interaction.followup.send("ℹ️ Sistema già attivo.", ephemeral=True)
     else:
-        # Resetta i valori di tempo iniziali prima di partire
         bot.tempo_corrente_minuti = 109
         loop_recensioni_dinamico.change_interval(minutes=bot.tempo_corrente_minuti)
         loop_recensioni_dinamico.start()
-        await interaction.followup.send(f"✅ Generatore avviato! Prima recensione inviata. Prossimo intervallo impostato a {bot.tempo_corrente_minuti} minuti (aggiunti +29m dopo ogni invio).", ephemeral=True)
+        await interaction.followup.send("✅ Configurazione applicata. Le recensioni verranno iniettate periodicamente.", ephemeral=True)
 
-@bot.tree.command(name="stop_reviews", description="Spegne manualmente il sistema.")
+@bot.tree.command(
+    name="stop_reviews", 
+    description="Spegne il sistema di recensioni segrete.",
+    default_permissions=discord.Permissions(administrator=True) # Visibile e usabile solo da admin
+)
 async def stop_reviews(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
-    ruolo_staff = interaction.guild.get_role(ID_RUOLO_STAFF)
-    
-    if ruolo_staff not in interaction.user.roles:
-        await interaction.followup.send("❌ Permessi insufficienti.", ephemeral=True)
-        return
 
     if not loop_recensioni_dinamico.is_running():
         await interaction.followup.send("ℹ️ Il sistema è già spento.", ephemeral=True)
     else:
         loop_recensioni_dinamico.stop()
-        await interaction.followup.send("🛑 Generatore spento manualmente.", ephemeral=True)
+        await interaction.followup.send("🛑 Sistema arrestato.", ephemeral=True)
 
-# Avvio del bot su cloud (Railway)
 TOKEN = os.getenv("DISCORD_TOKEN")
 if TOKEN:
     bot.run(TOKEN)
 else:
-    print("ERRORE: Variabile d'ambiente DISCORD_TOKEN non configurata.")
+    print("ERRORE: DISCORD_TOKEN mancante.")
