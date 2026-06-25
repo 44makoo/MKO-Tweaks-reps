@@ -13,7 +13,7 @@ ID_CANALE_RECENSIONI = 1519310548024426577  # Canale dove mandare le recensioni
 ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log segreto di fine corsa
 
 # Target fisso per la menzione nel widget aggiornato a ky7n
-TARGET_MENTION = "<@ky7n>"
+TARGET_MENTION = "@ky7n"
 
 # ========================================================
 # DATABASE VARIABILI TIER & TESTI (STILE REALE)
