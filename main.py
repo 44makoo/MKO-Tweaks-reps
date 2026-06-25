@@ -11,11 +11,23 @@ from datetime import datetime, timedelta
 ID_CANALE_RECENSIONI = 1519310548024426577  # Canale dove mandare le recensioni
 ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log segreto di fine corsa
 
+# Target fisso per la menzione nel widget (ID fornito dall'utente)
+TARGET_ID = "1493321634835202291"
+
 # Componenti per i nickname (stile reali utenti discord)
 PREFISSI_USER = ["vortex", "zack", "hyper", "dark", "liquid", "gamer", "swift", "glitch", "alpha", "shadow", "neon", "apex", "ghost", "pulse"]
 SUFISSI_USER = ["_fps", "99", "_tuning", "gg", "ovr", "x", "⚡", "_pc", "plays", "04", "_clutch", "god", "z", "xd", "_w", "fr", "hz"]
 
-# Componenti per i testi (gergali, minuscoli, stile discord)
+# ========================================================
+# DATABASE VARIABILI TIER & TESTI (STILE REALE)
+# ========================================================
+ TIERS = [
+    {"name": "BASIC TWEAK", "price": "5€", "ansi_color": "[1;32m"},     # Verde
+    {"name": "ADVANCED TWEAKS", "price": "10€", "ansi_color": "[1;36m"}, # Azzurro
+    {"name": "ULTRA TWEAKS", "price": "25€", "ansi_color": "[1;35m"},    # Viola
+    {"name": "ELITE TWEAKS", "price": "45€", "ansi_color": "[1;31m"}     # Rosso
+]
+
 BLOCCO_1 = [
     "goat tweak fr",
     "fucking best optimization out there",
@@ -23,28 +35,21 @@ BLOCCO_1 = [
     "literally zero lag after this",
     "my pc was so bloated and slow before",
     "input delay is completely gone fr",
-    "holy shit my fps just doubled"
+    "holy shit my fps just doubled",
+    "best money i ever spent on my setup no cap"
 ]
 
 BLOCCO_2 = [
     "less process in my life and more fps",
     "goat os config setup is insane",
-    "advanced pack went hard as fuck",
     "mako really fixed my shitty delayed inputs",
     "the bios tuning is actual magic",
     "windows feels smooth like butter now",
-    "best money i ever spent on my setup no cap"
+    "stutters are completely gone goodbye",
+    "legit crazy difference fr fr"
 ]
 
-BLOCCO_3 = [
-    "big vouch for mako",
-    "w tweak fr go buy it",
-    "10/10 worth every penny",
-    "actual massive w",
-    "highly recommend if u wanna win matches",
-    "legit crazy difference fr fr",
-    "stutters are completely gone goodbye"
-]
+BANNER_URL = 'https://cdn.discordapp.com/attachments/1515438245813551147/1518560640778633246/ce2828a1-7b03-46bb-b7d3-710697e0ae07.png?ex=6a3a5d4e&is=6a390bce&hm=f14e25633beb62c6c1f6c81a4102619dff3c71973a73f30edd4c0f34b5f85a43&'
 
 class BotRecensioniInvisibili(commands.Bot):
     def __init__(self):
@@ -57,11 +62,21 @@ class BotRecensioniInvisibili(commands.Bot):
 
     def genera_tutte_le_combinazioni(self):
         lista_totale = []
-        for b1 in BLOCCO_1:
-            for b2 in BLOCCO_2:
-                for b3 in BLOCCO_3:
-                    testo_recensione = f'"{b1}, {b2}. {b3} ⭐⭐⭐⭐⭐"'
-                    lista_totale.append(testo_recensione)
+        # Genera variazioni mischiando tier, testi e statistiche tecniche di performance
+        for tier in TIERS:
+            for b1 in BLOCCO_1:
+                for b2 in BLOCCO_2:
+                    # Alterna stringhe di performance casuali (+fps, -input lag, +smoothness)
+                    perf = random.choice(["+fps -input lag", "+smoothness -delay", "max fps +vouch", "-latency +fps fr"])
+                    testo_completo = f"+rep <@{TARGET_ID}> x1 {tier['name'].lower()} {tier['price']} {perf}. {b1}, {b2} ⭐⭐⭐⭐⭐"
+                    
+                    # Conserviamo sia il testo strutturato che i dati del tier per la colorazione ANSI nel widget
+                    lista_totale.append({
+                        "text": testo_completo,
+                        "tier_name": tier["name"],
+                        "tier_price": tier["price"],
+                        "ansi_color": tier["ansi_color"]
+                    })
         random.shuffle(lista_totale)
         return lista_totale
 
@@ -70,12 +85,11 @@ class BotRecensioniInvisibili(commands.Bot):
         await self.tree.sync()
 
     async def on_ready(self):
-        print(f"🚀 Bot Pronto. Sistema anti-sgamo pronto al deploy.")
+        print(f"🚀 Bot Pronto. Sistema Vouch ad alto realismo integrato.")
 
 bot = BotRecensioniInvisibili()
 
 async def invia_singola_recensione():
-    """Funzione interna per generare e spedire il widget +rep"""
     if not bot.combinazioni_rimanenti:
         canale_log = bot.get_channel(ID_CANALE_LOG_FINE)
         if canale_log:
@@ -86,16 +100,37 @@ async def invia_singola_recensione():
 
     canale_recensioni = bot.get_channel(ID_CANALE_RECENSIONI)
     if canale_recensioni:
-        recensione = bot.combinazioni_rimanenti.pop(0)
-        utente = f"{random.choice(PREFISSI_USER)}{random.choice(SUFISSI_USER)}"
+        data_recensione = bot.combinazioni_rimanenti.pop(0)
+        utente_fake = f"{random.choice(PREFISSI_USER)}{random.choice(SUFISSI_USER)}"
+        
+        # Recupero parametri per iniettarli nella tabella grafica ANSI identica al codice JS
+        color_ansi = data_recensione["ansi_color"]
+        tier_str = f"{data_recensione['tier_name']} ({data_recensione['tier_price']})"
+        
+        # COSTRUZIONE DEL WIDGET GRAFICO IDENTICO AL PRIMO CODICE (Formato ANSI)
+        ansi_widget = (
+            f"```ansi\n"
+            f"[1;37m┌────────────────────────────────────────┐[0m\n"
+            f"[1;35m 👤 CLIENT:[0m {utente_fake}\n"
+            f"{color_ansi} 📦 SERVICE:[0m {tier_str}\n"
+            f"[1;33m ⭐ RATING:[0m 5/5 ⭐ ⭐ ⭐ ⭐ ⭐\n"
+            f"[1;37m└────────────────────────────────────────┘[0m\n"
+            f"```\n"
+            f"📝 **FEEDBACK RILASCIATO:**\n"
+            f"> *{data_recensione['text']}*\n\n"
+            f"📡 *Ottimizzazione verificata e salvata nel registro pubblico MKO Network.*"
+        )
 
         embed = discord.Embed(
-            title=f"➕ +rep from {utente}",
-            description=recensione,
-            color=discord.Color.from_str("#2b2d31")
+            description=ansi_widget,
+            color=discord.Color.from_str("#ffffff") # Bianco puro, identico al codice JS (0xffffff)
         )
-        embed.add_field(name="Status", value="✓ Verified Customer", inline=True)
-        embed.set_footer(text="Mako Tweaks • Customer Vouch")
+        embed.set_author(
+            name=f"{utente_fake} ha rilasciato un Vouch!",
+            icon_url=bot.user.display_avatar.url
+        )
+        embed.set_image(url=BANNER_URL)
+        embed.set_footer(text=f"MKO TWEAKS SYSTEM • USER ID: {random.randint(200000000000000000, 999999999999999999)}")
         embed.timestamp = datetime.now()
 
         await canale_recensioni.send(embed=embed)
@@ -111,14 +146,12 @@ async def loop_recensioni_orologio():
         return
 
     if datetime.now() >= bot.prossimo_invio:
-        # Invia la recensione corrente
         successo = await invia_singola_recensione()
         
         if successo:
-            # Calcola il prossimo blocco incrementando di 29 minuti
             bot.tempo_attesa_minuti += 29
             bot.prossimo_invio = datetime.now() + timedelta(minutes=bot.tempo_attesa_minuti)
-            print(f"[INFO] Recensione inviata. Prossima tra {bot.tempo_attesa_minuti} minuti.")
+            print(f"[INFO] Recensione inviata con grafica ANSI. Prossima tra {bot.tempo_attesa_minuti} minuti.")
 
 # ========================================================
 # COMANDI SLASH PROTETTI (SOLO AMMINISTRATORI)
@@ -132,17 +165,14 @@ async def start_reviews(interaction: discord.Interaction):
         await interaction.followup.send("ℹ️ Sistema già attivo.", ephemeral=True)
     else:
         bot.tempo_attesa_minuti = 109
-        
-        # Spedisce subito la prima recensione istantaneamente al click del comando
         prima_inviata = await invia_singola_recensione()
         
         if prima_inviata:
-            # Configura il timer per la seconda recensione (+109 minuti da adesso)
             bot.prossimo_invio = datetime.now() + timedelta(minutes=bot.tempo_attesa_minuti)
             loop_recensioni_orologio.start()
-            await interaction.followup.send("✅ Configurazione applicata. Prima recensione iniettata ora. Il loop incrementale è partito.", ephemeral=True)
+            await interaction.followup.send("✅ Configurazione applicata. Sistema grafico ANSI avviato.", ephemeral=True)
         else:
-            await interaction.followup.send("❌ Errore: Nessuna combinazione disponibile o canale non trovato.", ephemeral=True)
+            await interaction.followup.send("❌ Errore nell'invio iniziale.", ephemeral=True)
 
 @bot.tree.command(name="stop_reviews", description="Spegne il sistema di recensioni segrete.")
 @app_commands.default_permissions(administrator=True)
