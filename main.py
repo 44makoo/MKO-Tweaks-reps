@@ -16,7 +16,7 @@ ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log segreto di fine 
 TARGET_MENTION = "@ky7n"
 
 # ========================================================
-# DATABASE VARIABILI TIER & TESTI (STILE REALE)
+# DATABASE VARIABILI TIER & PAROLE CHIAVE MINIMALI
 # ========================================================
 TIERS = [
     {"name": "BASIC TWEAK", "price": "5€", "ansi_color": "[1;32m"},     # Verde
@@ -25,25 +25,18 @@ TIERS = [
     {"name": "ELITE TWEAKS", "price": "45€", "ansi_color": "[1;31m"}     # Rosso
 ]
 
-BLOCCO_1 = [
-    "goat tweak fr",
-    "fucking best optimization out there",
-    "games feel so good now",
-    "literally zero lag after this",
-    "my pc was so bloated and slow before",
-    "input delay is completely gone fr",
-    "holy shit my fps just doubled",
-    "best money i ever spent on my setup no cap"
-]
-
-BLOCCO_2 = [
-    "less process in my life and more fps",
-    "goat os config setup is insane",
-    "mako really fixed my shitty delayed inputs",
-    "the bios tuning is actual magic",
-    "windows feels smooth like butter now",
-    "stutters are completely gone goodbye",
-    "legit crazy difference fr fr"
+# Varianti corte per generare tantissimi feedback minimali diversi
+TAGS_PRESTAZIONI = [
+    "+fps -input lag",
+    "+smoothness -delay",
+    "max fps +vouch",
+    "-latency +fps fr",
+    "zero delay +fps boost",
+    "+performance -stutter",
+    "input lag fixed",
+    "0 delay fr fr",
+    "+fps -latency optimized",
+    "max performance +smoothness"
 ]
 
 BANNER_URL = 'https://cdn.discordapp.com/attachments/1515438245813551147/1518560640778633246/ce2828a1-7b03-46bb-b7d3-710697e0ae07.png?ex=6a3a5d4e&is=6a390bce&hm=f14e25633beb62c6c1f6c81a4102619dff3c71973a73f30edd4c0f34b5f85a43&'
@@ -59,18 +52,19 @@ class BotRecensioniInvisibili(commands.Bot):
 
     def genera_tutte_le_combinazioni(self):
         lista_totale = []
+        # Genera tantissime combinazioni corte incrociando i Tier con i tag prestazionali scritti in modi diversi
         for tier in TIERS:
-            for b1 in BLOCCO_1:
-                for b2 in BLOCCO_2:
-                    perf = random.choice(["+fps -input lag", "+smoothness -delay", "max fps +vouch", "-latency +fps fr"])
-                    testo_completo = f"+rep {TARGET_MENTION} x1 {tier['name'].lower()} {tier['price']} {perf}. {b1}, {b2} ⭐⭐⭐⭐⭐"
-                    
-                    lista_totale.append({
-                        "text": testo_completo,
-                        "tier_name": tier["name"],
-                        "tier_price": tier["price"],
-                        "ansi_color": tier["ansi_color"]
-                    })
+            for tag1 in TAGS_PRESTAZIONI:
+                for tag2 in TAGS_PRESTAZIONI:
+                    if tag1 != tag2:
+                        testo_completo = f"+rep {TARGET_MENTION} x1 {tier['name'].lower()} {tier['price']} {tag1} {tag2} ⭐⭐⭐⭐⭐"
+                        
+                        lista_totale.append({
+                            "text": testo_completo,
+                            "tier_name": tier["name"],
+                            "tier_price": tier["price"],
+                            "ansi_color": tier["ansi_color"]
+                        })
         random.shuffle(lista_totale)
         return lista_totale
 
@@ -79,7 +73,7 @@ class BotRecensioniInvisibili(commands.Bot):
         await self.tree.sync()
 
     async def on_ready(self):
-        print(f"🚀 Bot Pronto. Sistema Vouch ad alto realismo integrato.")
+        print(f"🚀 Bot Pronto. Sistema Vouch minimali ad alto realismo integrato.")
 
 bot = BotRecensioniInvisibili()
 
