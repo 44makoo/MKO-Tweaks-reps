@@ -21,7 +21,7 @@ SUFISSI_USER = ["_fps", "99", "_tuning", "gg", "ovr", "x", "⚡", "_pc", "plays"
 # ========================================================
 # DATABASE VARIABILI TIER & TESTI (STILE REALE)
 # ========================================================
- TIERS = [
+TIERS = [
     {"name": "BASIC TWEAK", "price": "5€", "ansi_color": "[1;32m"},     # Verde
     {"name": "ADVANCED TWEAKS", "price": "10€", "ansi_color": "[1;36m"}, # Azzurro
     {"name": "ULTRA TWEAKS", "price": "25€", "ansi_color": "[1;35m"},    # Viola
@@ -62,15 +62,12 @@ class BotRecensioniInvisibili(commands.Bot):
 
     def genera_tutte_le_combinazioni(self):
         lista_totale = []
-        # Genera variazioni mischiando tier, testi e statistiche tecniche di performance
         for tier in TIERS:
             for b1 in BLOCCO_1:
                 for b2 in BLOCCO_2:
-                    # Alterna stringhe di performance casuali (+fps, -input lag, +smoothness)
                     perf = random.choice(["+fps -input lag", "+smoothness -delay", "max fps +vouch", "-latency +fps fr"])
                     testo_completo = f"+rep <@{TARGET_ID}> x1 {tier['name'].lower()} {tier['price']} {perf}. {b1}, {b2} ⭐⭐⭐⭐⭐"
                     
-                    # Conserviamo sia il testo strutturato che i dati del tier per la colorazione ANSI nel widget
                     lista_totale.append({
                         "text": testo_completo,
                         "tier_name": tier["name"],
@@ -103,11 +100,9 @@ async def invia_singola_recensione():
         data_recensione = bot.combinazioni_rimanenti.pop(0)
         utente_fake = f"{random.choice(PREFISSI_USER)}{random.choice(SUFISSI_USER)}"
         
-        # Recupero parametri per iniettarli nella tabella grafica ANSI identica al codice JS
         color_ansi = data_recensione["ansi_color"]
         tier_str = f"{data_recensione['tier_name']} ({data_recensione['tier_price']})"
         
-        # COSTRUZIONE DEL WIDGET GRAFICO IDENTICO AL PRIMO CODICE (Formato ANSI)
         ansi_widget = (
             f"```ansi\n"
             f"[1;37m┌────────────────────────────────────────┐[0m\n"
@@ -123,7 +118,7 @@ async def invia_singola_recensione():
 
         embed = discord.Embed(
             description=ansi_widget,
-            color=discord.Color.from_str("#ffffff") # Bianco puro, identico al codice JS (0xffffff)
+            color=discord.Color.from_str("#ffffff")
         )
         embed.set_author(
             name=f"{utente_fake} ha rilasciato un Vouch!",
