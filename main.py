@@ -1,5 +1,6 @@
 import os
 import random
+import string
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -11,12 +12,8 @@ from datetime import datetime, timedelta
 ID_CANALE_RECENSIONI = 1519310548024426577  # Canale dove mandare le recensioni
 ID_CANALE_LOG_FINE = 1519403485852991781    # Canale per il log segreto di fine corsa
 
-# Target fisso per la menzione nel widget (ID fornito dall'utente)
-TARGET_ID = "1493321634835202291"
-
-# Componenti per i nickname (stile reali utenti discord)
-PREFISSI_USER = ["vortex", "zack", "hyper", "dark", "liquid", "gamer", "swift", "glitch", "alpha", "shadow", "neon", "apex", "ghost", "pulse"]
-SUFISSI_USER = ["_fps", "99", "_tuning", "gg", "ovr", "x", "⚡", "_pc", "plays", "04", "_clutch", "god", "z", "xd", "_w", "fr", "hz"]
+# Target fisso per la menzione nel widget aggiornato a ky7n
+TARGET_MENTION = "<@ky7n>"
 
 # ========================================================
 # DATABASE VARIABILI TIER & TESTI (STILE REALE)
@@ -66,7 +63,7 @@ class BotRecensioniInvisibili(commands.Bot):
             for b1 in BLOCCO_1:
                 for b2 in BLOCCO_2:
                     perf = random.choice(["+fps -input lag", "+smoothness -delay", "max fps +vouch", "-latency +fps fr"])
-                    testo_completo = f"+rep <@{TARGET_ID}> x1 {tier['name'].lower()} {tier['price']} {perf}. {b1}, {b2} ⭐⭐⭐⭐⭐"
+                    testo_completo = f"+rep {TARGET_MENTION} x1 {tier['name'].lower()} {tier['price']} {perf}. {b1}, {b2} ⭐⭐⭐⭐⭐"
                     
                     lista_totale.append({
                         "text": testo_completo,
@@ -86,6 +83,16 @@ class BotRecensioniInvisibili(commands.Bot):
 
 bot = BotRecensioniInvisibili()
 
+def genera_username_unico():
+    """Genera un nome utente completamente casuale e dinamico per evitare ripetizioni strutturali"""
+    stili = [
+        f"user_{''.join(random.choices(string.ascii_lowercase + string.digits, k=5))}",
+        f"client_{''.join(random.choices(string.digits, k=4))}{random.choice(['x', 'z', '_', 'ff'])}",
+        f"{''.join(random.choices(string.ascii_lowercase, k=6))}_{random.randint(10, 99)}",
+        f"mako_customer_{random.randint(100, 999)}"
+    ]
+    return random.choice(stili)
+
 async def invia_singola_recensione():
     if not bot.combinazioni_rimanenti:
         canale_log = bot.get_channel(ID_CANALE_LOG_FINE)
@@ -98,7 +105,9 @@ async def invia_singola_recensione():
     canale_recensioni = bot.get_channel(ID_CANALE_RECENSIONI)
     if canale_recensioni:
         data_recensione = bot.combinazioni_rimanenti.pop(0)
-        utente_fake = f"{random.choice(PREFISSI_USER)}{random.choice(SUFISSI_USER)}"
+        
+        # Generazione del nome utente totalmente casuale ad ogni ciclo
+        utente_fake = genera_username_unico()
         
         color_ansi = data_recensione["ansi_color"]
         tier_str = f"{data_recensione['tier_name']} ({data_recensione['tier_price']})"
@@ -113,7 +122,7 @@ async def invia_singola_recensione():
             f"```\n"
             f"📝 **FEEDBACK RILASCIATO:**\n"
             f"> *{data_recensione['text']}*\n\n"
-            f"📡 *Ottimizzazione verificata e salvata nel registro pubblico MKO Network.*"
+            f"📡 *🛒 [Acquisto Verificato via Sito Web] — Ottimizzazione registrata nel sistema MKO Network.*"
         )
 
         embed = discord.Embed(
